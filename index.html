@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#28a745">
+    <meta name="description" content="Rescate Alimentario: Reduce el desperdicio conectando excedentes con quienes los necesitan.">
     <title>Rescate Alimentario</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Incluir Leaflet CSS -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <!-- Incluir Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header>
@@ -17,113 +21,72 @@
             <ul>
                 <li><a href="#home">Inicio</a></li>
                 <li><a href="#about">Sobre Nosotros</a></li>
-                <li><a href="#features">Funcionalidades</a></li>
-                <li><a href="#report">Reportar Producto</a></li>
-                <li><a href="#reported-products">Productos Reportados</a></li>
-                <li><a href="#contact">Contacto</a></li>
+                <li><a href="#report">Reportar</a></li>
+                <li><a href="#products">Productos</a></li>
+                <li><a href="#stats">Impacto</a></li>
             </ul>
         </nav>
     </header>
-    
+
     <section id="home">
-        <h2>Reduciendo el Desperdicio de Alimentos</h2>
-        <p>Conecta con supermercados, restaurantes y consumidores para rescatar alimentos a punto de caducar.</p>
-        <button>Únete Ahora</button>
+        <h2>Salva Comida, Salva el Planeta</h2>
+        <p>Conecta excedentes con quienes los necesitan.</p>
+        <button class="join-btn">Únete Ahora</button>
     </section>
-    
+
     <section id="about">
         <h2>Sobre Nosotros</h2>
         <div class="about-container">
             <div class="about-card">
-                <span class="icon">🌍</span>
+                <i class="fas fa-globe icon"></i>
                 <h3>Misión</h3>
-                <p>Reducir el desperdicio alimentario conectando a quienes tienen excedentes con quienes los necesitan.</p>
+                <p>Reducir el desperdicio alimentario.</p>
             </div>
             <div class="about-card">
-                <span class="icon">🤝</span>
+                <i class="fas fa-users icon"></i>
                 <h3>Comunidad</h3>
-                <p>Trabajamos con supermercados, restaurantes y usuarios para crear una red sostenible.</p>
+                <p>Colaboramos para un futuro sostenible.</p>
             </div>
             <div class="about-card">
-                <span class="icon">🌱</span>
+                <i class="fas fa-leaf icon"></i>
                 <h3>Impacto</h3>
-                <p>Cada producto rescatado es un paso hacia un planeta más verde y responsable.</p>
+                <p>Cada rescate cuenta.</p>
             </div>
         </div>
     </section>
-    
-    <section id="features">
-        <h2>Funcionalidades</h2>
-        <div class="features-container">
-            <div class="feature-card">
-                <span class="icon">📍</span>
-                <h3>Búsqueda por Ubicación</h3>
-                <p>Encuentra productos cerca de ti con facilidad.</p>
-            </div>
-            <div class="feature-card">
-                <span class="icon">🔔</span>
-                <h3>Notificaciones en Tiempo Real</h3>
-                <p>Recibe alertas sobre nuevos productos disponibles.</p>
-            </div>
-            <div class="feature-card">
-                <span class="icon">🔍</span>
-                <h3>Filtrado por Categorías</h3>
-                <p>Explora productos según tus preferencias.</p>
-            </div>
-            <div class="feature-card">
-                <span class="icon">📦</span>
-                <h3>Reserva de Productos</h3>
-                <p>Asegura tu comida antes de que se agote.</p>
-            </div>
-        </div>
-    </section>
-    
+
     <section id="report" class="report-container">
-        <h2>📸 Reportar un Producto</h2>
-        <p>¡Ayuda a otros a encontrar productos antes de que se desperdicien!</p>
-        <form>
+        <h2><i class="fas fa-camera"></i> Reportar Producto</h2>
+        <form id="report-form">
             <div class="form-group">
-                <label for="foto">📷 Foto del Producto:</label>
-                <input type="file" id="foto" name="foto" accept="image/*" required>
+                <label for="foto">Tomar Foto:</label>
+                <button type="button" id="take-photo-btn" class="camera-btn"><i class="fas fa-camera"></i> Capturar</button>
+                <input type="file" id="foto" name="foto" accept="image/*" capture="environment" hidden>
+                <div id="preview"></div>
             </div>
             <div class="form-group">
-                <label for="nombre">🛒 Nombre del Producto / Descripción:</label>
-                <input type="text" id="nombre" name="nombre" placeholder="Ej: Yogur Natural 250g" required>
+                <label for="nombre">Nombre/Descripción:</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ej: Yogur 250g" required>
             </div>
             <div class="form-group">
-                <label for="tipo_fecha">📅 Tipo de Fecha:</label>
-                <select id="tipo_fecha" name="tipo_fecha">
-                    <option value="caducidad">Fecha de Caducidad</option>
-                    <option value="consumo_preferente">Fecha de Consumo Preferente</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="fecha">📆 Fecha:</label>
+                <label for="fecha">Fecha de Caducidad:</label>
                 <input type="date" id="fecha" name="fecha" required>
             </div>
             <div class="form-group">
-                <label for="ubicacion">📍 Ubicación:</label>
-                <input type="text" id="ubicacion" name="ubicacion" placeholder="Cargando ubicación..." required>
-                <!-- Botón opcional para actualizar manualmente -->
-                <button type="button" id="get-location-btn" class="location-btn">📍 Actualizar mi ubicación</button>
+                <label for="ubicacion">Ubicación:</label>
+                <input type="text" id="ubicacion" name="ubicacion" placeholder="Cargando..." required>
+                <button type="button" id="get-location-btn" class="location-btn"><i class="fas fa-map-marker-alt"></i> Actualizar</button>
             </div>
             <div class="form-group">
-                <label for="precio">💰 Precio Original:</label>
+                <label for="precio">Precio Original:</label>
                 <input type="number" id="precio" name="precio" step="0.01" placeholder="Ej: 2.50">
             </div>
             <div class="form-group">
-                <label for="precio_rebajado">💲 Precio Rebajado:</label>
+                <label for="precio_rebajado">Precio Rebajado:</label>
                 <input type="number" id="precio_rebajado" name="precio_rebajado" step="0.01" placeholder="Ej: 1.50">
             </div>
             <div class="form-group">
-                <label for="cantidad">📦 Cantidad Aproximada:</label>
-                <select id="cantidad" name="cantidad">
-                    <option value="pocos">Quedan pocos</option>
-                    <option value="moderado">Bastantes unidades</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="categoria">🍏 Categoría:</label>
+                <label for="categoria">Categoría:</label>
                 <select id="categoria" name="categoria">
                     <option value="frutas">Frutas/Verduras</option>
                     <option value="lacteos">Lácteos</option>
@@ -132,27 +95,44 @@
                     <option value="platos">Platos preparados</option>
                 </select>
             </div>
-            <button type="submit" class="report-btn">🚀 Reportar Producto</button>
+            <button type="submit" class="report-btn"><i class="fas fa-rocket"></i> Reportar</button>
         </form>
     </section>
-    
-    <section id="reported-products">
-        <h2>Productos Reportados</h2>
-        <div id="products-list">
-            <!-- Los productos se añadirán aquí dinámicamente -->
+
+    <section id="products">
+        <h2><i class="fas fa-box-open"></i> Productos Reportados</h2>
+        <div class="filter-container">
+            <input type="text" id="search" placeholder="Buscar por nombre...">
+            <select id="category-filter">
+                <option value="">Todas las categorías</option>
+                <option value="frutas">Frutas/Verduras</option>
+                <option value="lacteos">Lácteos</option>
+                <option value="carne">Carne/Pescado</option>
+                <option value="panaderia">Panadería</option>
+                <option value="platos">Platos preparados</option>
+            </select>
         </div>
-        <button id="clear-all-btn" class="clear-btn">🗑️ Borrar Todos</button>
+        <div id="products-list"></div>
+        <button id="clear-all-btn" class="clear-btn"><i class="fas fa-trash"></i> Borrar Todos</button>
     </section>
-    
-    <section id="contact">
-        <h2>Contacto</h2>
-        <p>¿Tienes preguntas? Contáctanos en <a href="mailto:info@rescatealimentario.com">info@rescatealimentario.com</a></p>
+
+    <section id="stats">
+        <h2><i class="fas fa-chart-line"></i> Nuestro Impacto</h2>
+        <p id="impact-stats">Comida rescatada: <span id="total-weight">0</span> kg</p>
+        <p>Puntos ganados: <span id="user-points">0</span></p>
     </section>
-    
+
     <footer>
-        <p>© 2025 Rescate Alimentario. Todos los derechos reservados.</p>
+        <p>© 2025 Rescate Alimentario</p>
+        <div class="social-share">
+            <a href="#" id="share-whatsapp"><i class="fab fa-whatsapp"></i></a>
+            <a href="#" id="share-twitter"><i class="fab fa-twitter"></i></a>
+        </div>
     </footer>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="script.js"></script>
+    <script src="service-worker.js"></script>
 </body>
 </html>

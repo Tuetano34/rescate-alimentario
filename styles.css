@@ -1,33 +1,36 @@
-﻿body {
-    font-family: Arial, sans-serif;
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     color: #333;
-    font-size: 16px;
+    line-height: 1.6;
 }
 
 header {
     background: #28a745;
     color: white;
-    padding: 1rem 0;
+    padding: 1rem;
     text-align: center;
 }
 
 nav ul {
     list-style: none;
-    padding: 0;
-}
-
-nav ul li {
-    display: inline;
-    margin: 0 15px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 nav ul li a {
     color: white;
     text-decoration: none;
     font-weight: bold;
+    font-size: 0.9rem;
 }
 
 section {
@@ -37,145 +40,68 @@ section {
 
 #home {
     background: #ffc107;
-    padding: 50px 20px;
+    padding: 40px 20px;
 }
 
 button {
-    background: #007bff;
+    background: #28a745;
     color: white;
     border: none;
-    padding: 12px 24px;
-    cursor: pointer;
-    font-size: 1rem;
+    padding: 10px 20px;
     border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
 }
 
 button:hover {
-    background: #0056b3;
+    background: #218838;
 }
 
 footer {
     background: #343a40;
     color: white;
-    text-align: center;
     padding: 10px;
-    position: relative;
-    bottom: 0;
-    width: 100%;
+    text-align: center;
 }
 
-#about {
-    background: #fff;
-    padding: 40px 20px;
+.social-share a {
+    color: white;
+    margin: 0 10px;
+    font-size: 1.2rem;
 }
 
-#about h2 {
-    color: #28a745;
-    margin-bottom: 30px;
-}
-
+/* About Section */
 .about-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    gap: 15px;
+    padding: 20px;
 }
 
 .about-card {
-    background: #f9f9f9;
-    padding: 20px;
+    background: white;
+    padding: 15px;
     border-radius: 10px;
     width: 100%;
-    max-width: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.about-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    max-width: 280px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .about-card .icon {
-    font-size: 3rem;
+    font-size: 2rem;
     color: #28a745;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
-.about-card h3 {
-    color: #333;
-    margin: 10px 0;
-}
-
-.about-card p {
-    font-size: 1rem;
-    color: #666;
-}
-
-#features {
-    background: #e9ecef;
-    padding: 40px 20px;
-}
-
-#features h2 {
-    color: #28a745;
-    margin-bottom: 30px;
-}
-
-.features-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.feature-card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 250px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.feature-card .icon {
-    font-size: 2.5rem;
-    color: #007bff;
-    margin-bottom: 15px;
-}
-
-.feature-card h3 {
-    color: #333;
-    margin: 10px 0;
-}
-
-.feature-card p {
-    font-size: 0.9rem;
-    color: #666;
-}
-
+/* Report Section */
 .report-container {
     background: white;
-    padding: 30px;
+    padding: 20px;
     margin: 20px auto;
-    width: 80%;
-    max-width: 600px;
+    max-width: 500px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.report-container h2 {
-    color: #28a745;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .form-group {
@@ -184,187 +110,127 @@ footer {
 }
 
 .form-group label {
-    display: block;
     font-weight: bold;
     margin-bottom: 5px;
+    display: block;
 }
 
-.form-group input,
-.form-group select {
+.form-group input, .form-group select {
     width: 100%;
-    padding: 12px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    font-size: 1rem;
 }
 
-.form-group input[type="file"] {
-    padding: 5px;
-    border: none;
-}
-
-.location-btn {
+.camera-btn {
     background: #28a745;
-    color: white;
-    padding: 5px 10px;
-    margin-top: 5px;
-    font-size: 0.9rem;
-    border-radius: 5px;
-}
-
-.location-btn:hover {
-    background: #218838;
-}
-
-.report-btn {
-    background: #28a745;
-    color: white;
-    padding: 12px 24px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    padding: 8px 15px;
     width: 100%;
-}
-
-.report-btn:hover {
-    background: #218838;
-}
-
-#preview {
-    margin: 15px 0;
-    text-align: center;
-    border: 2px dashed #28a745;
-    border-radius: 5px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    min-height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    margin-bottom: 10px;
 }
 
 #preview img {
     max-width: 100%;
-    max-height: 200px;
+    max-height: 150px;
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease-in-out;
+    margin-top: 10px;
 }
 
-#preview img:hover {
-    transform: scale(1.05);
+.location-btn {
+    background: #28a745;
+    margin-top: 5px;
+    padding: 5px 10px;
 }
 
-#reported-products {
-    background: #fff;
-    padding: 30px;
-    margin: 20px auto;
-    width: 80%;
-    max-width: 800px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+/* Products Section */
+#products {
+    background: #e9ecef;
+    padding: 20px;
 }
 
-#reported-products h2 {
-    color: #28a745;
-    margin-bottom: 20px;
-}
-
-#products-list {
+.filter-container {
     display: flex;
     flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
     justify-content: center;
-    gap: 20px;
+}
+
+#search, #category-filter {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 300px;
 }
 
 .product-item {
-    background: #f9f9f9;
+    background: white;
     padding: 15px;
     border-radius: 5px;
     width: 100%;
     max-width: 300px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    margin: 10px auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.product-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.product-item .icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: color 0.2s ease-in-out;
-}
-
-.product-item .icon:hover {
-    color: #28a745;
-}
-
-.product-item p {
-    margin: 5px 0;
-    font-size: 1rem;
-}
-
-.product-item .location {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.product-item .view-map-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    margin-top: 10px;
-    cursor: pointer;
+.product-item img {
+    max-width: 100%;
+    max-height: 150px;
     border-radius: 5px;
+}
+
+.product-item .reserve-btn {
+    background: #ffc107;
+    color: #333;
+}
+
+.product-item .timer {
+    color: #dc3545;
     font-size: 0.9rem;
 }
 
-.product-item .view-map-btn:hover {
-    background: #0056b3;
-}
-
-.product-item .delete-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 10px;
+.product-item .share-btn {
+    background: #28a745;
     margin-top: 5px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 0.9rem;
 }
 
-.product-item .delete-btn:hover {
-    background: #c82333;
+/* Stats Section */
+#stats {
+    background: #fff;
+    padding: 20px;
 }
 
-.clear-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    margin-top: 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 1rem;
+#stats span {
+    color: #28a745;
+    font-weight: bold;
 }
 
-.clear-btn:hover {
-    background: #c82333;
-}
-
+/* Responsive Design */
 @media (max-width: 600px) {
-    .about-card, .feature-card {
+    nav ul {
+        flex-direction: column;
+        gap: 5px;
+    }
+    .report-container, #products {
+        padding: 15px;
+        margin: 10px;
+    }
+    .form-group input, .form-group select {
+        font-size: 0.9rem;
+    }
+    .product-item {
         max-width: 100%;
     }
-    .report-container, #reported-products {
-        width: 90%;
-    }
+}
+
+/* PWA Offline Styling */
+.offline {
+    background: #dc3545;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
 }

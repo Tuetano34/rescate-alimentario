@@ -215,9 +215,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         item.querySelector(".share-btn").addEventListener("click", () => {
-            // Usar la URL base de GitHub Pages
-            const baseUrl = "https://tu-usuario.github.io/nombre-del-repositorio"; // Reemplaza con tu URL de GitHub Pages
-            const shareUrl = `${baseUrl}/index.html?id=${product.id}&nombre=${encodeURIComponent(product.nombre)}&ubicacion=${encodeURIComponent(product.ubicacion)}&categoria=${product.categoria}&fecha=${product.fecha}&precio=${product.precio || ''}&precio_rebajado=${product.precioRebajado || ''}`;
+            // Usar la URL base de tu proyecto en GitHub Pages
+            const baseUrl = "https://tuetano34.github.io/rescate-alimentario";
+            const shareUrl = `${baseUrl}?id=${product.id}&nombre=${encodeURIComponent(product.nombre)}&ubicacion=${encodeURIComponent(product.ubicacion)}&categoria=${product.categoria}&fecha=${product.fecha}&precio=${product.precio || ''}&precio_rebajado=${product.precioRebajado || ''}`;
             const text = `${product.nombre} disponible en ${product.ubicacion}. ¡Resérvalo ahora!`;
             
             // Mostrar el enlace generado para depuración

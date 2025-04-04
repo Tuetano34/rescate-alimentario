@@ -188,8 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         item.querySelector(".view-map-btn").addEventListener("click", async () => {
             try {
+                // Depurar la ubicación que se está enviando a la API
+                console.log("Ubicación enviada a Nominatim:", product.ubicacion);
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(product.ubicacion)}&format=json&limit=1`);
                 const data = await res.json();
+                console.log("Respuesta de Nominatim:", data); // Depurar la respuesta
                 if (data[0]) {
                     showMap(data[0].lat, data[0].lon, product.nombre, product.ubicacion);
                 } else {
@@ -215,12 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         item.querySelector(".share-btn").addEventListener("click", () => {
-            // Usar la URL base de tu proyecto en GitHub Pages
             const baseUrl = "https://tuetano34.github.io/rescate-alimentario";
             const shareUrl = `${baseUrl}?id=${product.id}&nombre=${encodeURIComponent(product.nombre)}&ubicacion=${encodeURIComponent(product.ubicacion)}&categoria=${product.categoria}&fecha=${product.fecha}&precio=${product.precio || ''}&precio_rebajado=${product.precioRebajado || ''}`;
             const text = `${product.nombre} disponible en ${product.ubicacion}. ¡Resérvalo ahora!`;
             
-            // Mostrar el enlace generado para depuración
             console.log("Enlace generado para compartir:", shareUrl);
             
             if (navigator.share) {

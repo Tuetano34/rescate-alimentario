@@ -87,44 +87,45 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Opcional: Compresión de Imagen (descomentar si lo deseas)
-    /*
-    function compressImage(file, callback) {
-        const img = new Image();
-        const reader = new FileReader();
-        reader.onload = e => {
-            img.src = e.target.result;
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                canvas.width = 800;
-                canvas.height = (img.height / img.width) * 800;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                callback(canvas.toDataURL("image/jpeg", 0.7));
-            };
-        };
-        reader.readAsDataURL(file);
-    }
-
-    fotoInput.addEventListener("change", () => {
-        preview.innerHTML = "";
-        if (fotoInput.files[0]) {
-            compressImage(fotoInput.files[0], dataUrl => {
-                const img = document.createElement("img");
-                img.src = dataUrl;
-                preview.appendChild(img);
-            });
-        }
-    });
-    */
-
     // Load Products from localStorage
     function loadProducts() {
         const products = JSON.parse(localStorage.getItem("products") || "[]");
         products.forEach(addProductToList);
         updateStats(products.length);
+        checkSharedProduct(products);
     }
     loadProducts();
+
+    // Check for Shared Product in URL
+    function checkSharedProduct(existingProducts) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedId = urlParams.get("id");
+        if (sharedId) {
+            const sharedProduct = existingProducts.find(p => p.id == sharedId);
+            if (sharedProduct) {
+                const existingItem = productsList.querySelector(`[data-id="${sharedId}"]`);
+                if (existingItem) existingItem.scrollIntoView({ behavior: "smooth" });
+            } else {
+                const product = {
+                    id: parseInt(sharedId),
+                    nombre: urlParams.get("nombre") || "Producto compartido",
+                    ubicacion: urlParams.get("ubicacion") || "Ubicación desconocida",
+                    categoria: urlParams.get("categoria") || "frutas",
+                    foto: "https://via.placeholder.com/150",
+                    fecha: urlParams.get("fecha") || new Date().toISOString().split("T")[0],
+                    precio: urlParams.get("precio") || "",
+                    precioRebajado: urlParams.get("precio_rebajado") || "",
+                    reserved: false,
+                    reserveTime: null
+                };
+                addProductToList(product);
+                const products = JSON.parse(localStorage.getItem("products") || "[]");
+                products.push(product);
+                localStorage.setItem("products", JSON.stringify(products));
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
 
     // Form Submission
     form.addEventListener("submit", async e => {
@@ -186,9 +187,18 @@ document.addEventListener("DOMContentLoaded", () => {
         productsList.appendChild(item);
 
         item.querySelector(".view-map-btn").addEventListener("click", async () => {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(product.ubicacion)}&format=json&limit=1`);
-            const data = await res.json();
-            if (data[0]) showMap(data[0].lat, data[0].lon, product.nombre, product.ubicacion);
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(product.ubicacion)}&format=json&limit=1`);
+                const data = await res.json();
+                if (data[0]) {
+                    showMap(data[0].lat, data[0].lon, product.nombre, product.ubicacion);
+                } else {
+                    alert("No se pudo encontrar la ubicación en el mapa.");
+                }
+            } catch (error) {
+                console.error("Error al buscar ubicación:", error);
+                alert("Error al cargar el mapa. Intenta de nuevo.");
+            }
         });
 
         const reserveBtn = item.querySelector(".reserve-btn");
@@ -205,8 +215,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         item.querySelector(".share-btn").addEventListener("click", () => {
-            const text = `${product.nombre} disponible en ${product.ubicacion}`;
-            navigator.share ? navigator.share({ title: "Rescate Alimentario", text, url: window.location.href }) : alert("Compartir no soportado");
+            // Usar la URL base de GitHub Pages
+            const baseUrl = "https://tu-usuario.github.io/nombre-del-repositorio"; // Reemplaza con tu URL de GitHub Pages
+            const shareUrl = `${baseUrl}/index.html?id=${product.id}&nombre=${encodeURIComponent(product.nombre)}&ubicacion=${encodeURIComponent(product.ubicacion)}&categoria=${product.categoria}&fecha=${product.fecha}&precio=${product.precio || ''}&precio_rebajado=${product.precioRebajado || ''}`;
+            const text = `${product.nombre} disponible en ${product.ubicacion}. ¡Resérvalo ahora!`;
+            
+            // Mostrar el enlace generado para depuración
+            console.log("Enlace generado para compartir:", shareUrl);
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: "Rescate Alimentario",
+                    text: text,
+                    url: shareUrl
+                })
+                .then(() => console.log("Compartido exitosamente"))
+                .catch(err => {
+                    console.error("Error al compartir:", err);
+                    fallbackShare(shareUrl);
+                });
+            } else {
+                console.log("navigator.share no soportado");
+                fallbackShare(shareUrl);
+            }
         });
 
         item.querySelector(".delete-btn").addEventListener("click", () => {
@@ -216,6 +247,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateStats(productsList.children.length);
             }
         });
+    }
+
+    // Fallback para compartir si navigator.share no está disponible
+    function fallbackShare(url) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    alert("Enlace copiado al portapapeles: " + url);
+                })
+                .catch(err => {
+                    console.error("Error al copiar al portapapeles:", err);
+                    alert("Por favor, copia este enlace manualmente: " + url);
+                });
+        } else {
+            alert("Por favor, copia este enlace manualmente: " + url);
+        }
     }
 
     // Timer
@@ -274,23 +321,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Map
     function showMap(lat, lng, nombre, ubicacion) {
+        const mapId = `map-${Date.now()}`;
         const modal = document.createElement("div");
         modal.className = "map-modal";
         modal.innerHTML = `
             <div class="map-content">
                 <h3>${nombre}</h3>
                 <p>${ubicacion}</p>
-                <div id="map" style="height: 300px;"></div>
+                <div id="${mapId}" style="height: 300px;"></div>
                 <button>Cerrar</button>
             </div>
         `;
         document.body.appendChild(modal);
-        const map = L.map("map").setView([lat, lng], 15);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap"
-        }).addTo(map);
-        L.marker([lat, lng]).addTo(map).bindPopup(nombre).openPopup();
+
+        setTimeout(() => {
+            const map = L.map(mapId).setView([lat, lng], 15);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap"
+            }).addTo(map);
+            L.marker([lat, lng]).addTo(map).bindPopup(nombre).openPopup();
+        }, 0);
+
         modal.querySelector("button").addEventListener("click", () => modal.remove());
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     // Stats

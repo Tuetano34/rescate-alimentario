@@ -1,389 +1,242 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("report-form");
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
     const fotoInput = document.getElementById("foto");
-    const takePhotoBtn = document.getElementById("take-photo-btn");
     const ubicacionInput = document.getElementById("ubicacion");
     const getLocationBtn = document.getElementById("get-location-btn");
-    const preview = document.getElementById("preview");
+    const previewContainer = document.createElement("div");
+    previewContainer.id = "preview";
+    previewContainer.style.marginTop = "10px";
+    form.insertBefore(previewContainer, form.querySelector(".report-btn"));
+
     const productsList = document.getElementById("products-list");
     const clearAllBtn = document.getElementById("clear-all-btn");
-    const searchInput = document.getElementById("search");
-    const categoryFilter = document.getElementById("category-filter");
-    const totalWeight = document.getElementById("total-weight");
-    const userPoints = document.getElementById("user-points");
 
     const categoryIcons = {
-        frutas: "fa-apple-alt",
-        lacteos: "fa-cheese",
-        carne: "fa-drumstick-bite",
-        panaderia: "fa-bread-slice",
-        platos: "fa-utensils"
+        frutas: "🍎",
+        lacteos: "🥛",
+        carne: "🍖",
+        panaderia: "🥐",
+        platos: "🍲"
     };
 
-    let points = parseInt(localStorage.getItem("userPoints")) || 0;
-    userPoints.textContent = points;
-
-    // PWA Service Worker Registration
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/service-worker.js")
-            .then(() => console.log("Service Worker registrado"))
-            .catch(err => console.error("Error al registrar SW:", err));
-    }
-
-    // Notificaciones Push
-    function showNotification(message) {
-        if (Notification.permission === "granted") {
-            new Notification(message);
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") new Notification(message);
-            });
-        }
-        const alert = document.createElement("div");
-        alert.className = "notification";
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
-    }
-
-    // Geolocation
     function getCurrentLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                async position => {
-                    const { latitude: lat, longitude: lng } = position.coords;
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
                     try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                        const data = await res.json();
-                        ubicacionInput.value = data.display_name || `${lat}, ${lng}`;
-                    } catch {
-                        ubicacionInput.value = `${lat}, ${lng}`;
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                        const data = await response.json();
+
+                        if (data && data.display_name) {
+                            ubicacionInput.value = data.display_name;
+                        } else {
+                            ubicacionInput.value = `Lat: ${lat}, Lon: ${lng}`;
+                            console.warn("No se pudo obtener una dirección legible.");
+                        }
+                    } catch (error) {
+                        console.error("Error al obtener la dirección:", error);
+                        ubicacionInput.value = `Lat: ${lat}, Lon: ${lng}`;
                     }
                 },
-                () => {
-                    ubicacionInput.placeholder = "Ingresa manualmente";
+                (error) => {
+                    console.error("Error al obtener la ubicación:", error);
+                    ubicacionInput.value = "";
+                    ubicacionInput.placeholder = "Ingresa la ubicación manualmente";
                 }
             );
+        } else {
+            console.error("El navegador no soporta geolocalización.");
+            ubicacionInput.value = "";
+            ubicacionInput.placeholder = "Tu navegador no soporta geolocalización";
         }
     }
+
     getCurrentLocation();
-    getLocationBtn.addEventListener("click", getCurrentLocation);
 
-    // Camera Capture
-    takePhotoBtn.addEventListener("click", () => {
-        fotoInput.click();
-    });
-
-    fotoInput.addEventListener("change", () => {
-        preview.innerHTML = "";
-        if (fotoInput.files[0]) {
+    fotoInput.addEventListener("change", function () {
+        previewContainer.innerHTML = "";
+        if (this.files && this.files[0]) {
             const reader = new FileReader();
-            reader.onload = e => {
+
+            reader.onload = function (e) {
                 const img = document.createElement("img");
                 img.src = e.target.result;
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(fotoInput.files[0]);
+                img.style.maxWidth = "200px";
+                img.style.borderRadius = "5px";
+                previewContainer.appendChild(img);
+            }
+
+            reader.readAsDataURL(this.files[0]);
         }
     });
 
-    // Load Products from localStorage
-    function loadProducts() {
-        const products = JSON.parse(localStorage.getItem("products") || "[]");
-        products.forEach(addProductToList);
-        updateStats(products.length);
-        checkSharedProduct(products);
-    }
-    loadProducts();
+    getLocationBtn.addEventListener("click", getCurrentLocation);
 
-    // Check for Shared Product in URL
-    function checkSharedProduct(existingProducts) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const sharedId = urlParams.get("id");
-        if (sharedId) {
-            const sharedProduct = existingProducts.find(p => p.id == sharedId);
-            if (sharedProduct) {
-                const existingItem = productsList.querySelector(`[data-id="${sharedId}"]`);
-                if (existingItem) existingItem.scrollIntoView({ behavior: "smooth" });
-            } else {
-                const product = {
-                    id: parseInt(sharedId),
-                    nombre: urlParams.get("nombre") || "Producto compartido",
-                    ubicacion: urlParams.get("ubicacion") || "Ubicación desconocida",
-                    categoria: urlParams.get("categoria") || "frutas",
-                    foto: "https://via.placeholder.com/150",
-                    fecha: urlParams.get("fecha") || new Date().toISOString().split("T")[0],
-                    precio: urlParams.get("precio") || "",
-                    precioRebajado: urlParams.get("precio_rebajado") || "",
-                    reserved: false,
-                    reserveTime: null
-                };
-                addProductToList(product);
-                const products = JSON.parse(localStorage.getItem("products") || "[]");
-                products.push(product);
-                localStorage.setItem("products", JSON.stringify(products));
-            }
-            window.history.replaceState({}, document.title, window.location.pathname);
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const foto = fotoInput.files.length ? URL.createObjectURL(fotoInput.files[0]) : null;
+        const nombre = document.getElementById("nombre").value.trim();
+        const fecha = document.getElementById("fecha").value;
+        const ubicacion = ubicacionInput.value.trim();
+        const precio = document.getElementById("precio").value;
+        const precioRebajado = document.getElementById("precio-rebajado").value;
+        const categoria = document.getElementById("categoria").value;
+
+        if (!nombre || !fecha || !ubicacion || !precio || !precioRebajado) {
+            alert("Por favor, complete todos los campos.");
+            return;
         }
-    }
 
-    // Form Submission
-    form.addEventListener("submit", async e => {
-        e.preventDefault();
-        const formData = new FormData(form);
         const product = {
-            id: Date.now(),
-            foto: await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(formData.get("foto"));
-            }),
-            nombre: formData.get("nombre").trim(),
-            fecha: formData.get("fecha"),
-            ubicacion: formData.get("ubicacion").trim(),
-            precio: formData.get("precio"),
-            precioRebajado: formData.get("precio_rebajado"),
-            categoria: formData.get("categoria"),
-            reserved: false,
-            reserveTime: null
+            foto: foto,
+            nombre: nombre,
+            fecha: fecha,
+            ubicacion: ubicacion,
+            precio: precio,
+            precioRebajado: precioRebajado,
+            categoria: categoria,
+            reservado: false // Añadir campo para el estado de reserva
         };
 
-        // Validation
-        if (!product.foto) return alert("Toma una foto del producto");
-        if (!product.nombre) return alert("Nombre requerido");
-        if (new Date(product.fecha) < new Date()) return alert("Fecha inválida");
-        if (!product.ubicacion) return alert("Ubicación requerida");
+        saveProduct(product);
+        displayProducts();
+        form.reset();
+        previewContainer.innerHTML = "";
+    });
 
-        const products = JSON.parse(localStorage.getItem("products") || "[]");
+    clearAllBtn.addEventListener("click", function () {
+        localStorage.removeItem("products");
+        displayProducts();
+    });
+
+    function saveProduct(product) {
+        let products = JSON.parse(localStorage.getItem("products") || "[]");
         products.push(product);
         localStorage.setItem("products", JSON.stringify(products));
-        addProductToList(product);
-        showNotification(`¡${product.nombre} reportado cerca de ti!`);
-        points += 10;
-        localStorage.setItem("userPoints", points);
-        userPoints.textContent = points;
-        updateStats(products.length);
-        form.reset();
-        preview.innerHTML = "";
-        getCurrentLocation();
-    });
+    }
 
-    // Add Product to List
-    function addProductToList(product) {
-        const item = document.createElement("div");
-        item.className = "product-item";
-        item.dataset.id = product.id;
-        item.innerHTML = `
-            <i class="fas ${categoryIcons[product.categoria]} icon"></i>
-            <img src="${product.foto}" alt="${product.nombre}">
-            <p>${product.nombre}</p>
-            <p class="location"><i class="fas fa-map-marker-alt"></i> ${product.ubicacion}</p>
-            <button class="view-map-btn">Ver Mapa</button>
-            <button class="reserve-btn" ${product.reserved ? "disabled" : ""}>Reservar</button>
-            <span class="timer"></span>
-            <button class="share-btn">Compartir</button>
-            <button class="delete-btn"><i class="fas fa-trash"></i></button>
-        `;
-        productsList.appendChild(item);
+    function displayProducts() {
+        productsList.innerHTML = "";
+        let products = JSON.parse(localStorage.getItem("products") || "[]");
 
-        item.querySelector(".view-map-btn").addEventListener("click", async () => {
-            try {
-                // Depurar la ubicación que se está enviando a la API
-                console.log("Ubicación enviada a Nominatim:", product.ubicacion);
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(product.ubicacion)}&format=json&limit=1`);
-                const data = await res.json();
-                console.log("Respuesta de Nominatim:", data); // Depurar la respuesta
-                if (data[0]) {
-                    showMap(data[0].lat, data[0].lon, product.nombre, product.ubicacion);
+        const categoryFilter = document.getElementById("category-filter").value;
+        const searchInput = document.getElementById("search-input").value.toLowerCase();
+
+        if (products.length === 0) {
+            productsList.innerHTML = "<p>No hay productos reportados.</p>";
+            return;
+        }
+
+        products.forEach((product, index) => {
+            if ((categoryFilter === "" || product.categoria === categoryFilter) &&
+                (searchInput === "" || product.nombre.toLowerCase().includes(searchInput))) {
+
+                const productDiv = document.createElement("div");
+                productDiv.classList.add("product-item");
+
+                const icon = document.createElement("span");
+                icon.classList.add("icon");
+                icon.textContent = categoryIcons[product.categoria] || "📦";
+                productDiv.appendChild(icon);
+
+                if (product.foto) {
+                    const img = document.createElement("img");
+                    img.src = product.foto;
+                    img.style.maxWidth = "100%";
+                    img.style.maxHeight = "150px";
+                    img.style.borderRadius = "5px";
+                    productDiv.appendChild(img);
+                }
+    
+                const productName = document.createElement("p");
+                productName.textContent = product.nombre;
+                productDiv.appendChild(productName);
+    
+                const productLocation = document.createElement("p");
+                productLocation.classList.add("location");
+                productLocation.textContent = "Ubicación: " + product.ubicacion;
+                productDiv.appendChild(productLocation);
+    
+                // Botón para ver mapa
+                const viewMapBtn = document.createElement("button");
+                viewMapBtn.classList.add("view-map-btn");
+                viewMapBtn.textContent = "Ver Mapa";
+                viewMapBtn.addEventListener("click", function () {
+                    openMap(product.ubicacion);
+                });
+                productDiv.appendChild(viewMapBtn);
+
+                // Botón para reservar producto
+                const reserveBtn = document.createElement("button");
+                reserveBtn.classList.add("reserve-btn");
+                
+                // Cambiar el texto y estilo del botón según el estado de reserva
+                if (product.reservado) {
+                    reserveBtn.textContent = "Reservado";
+                    reserveBtn.classList.add("reserved");
                 } else {
-                    alert("No se pudo encontrar la ubicación en el mapa.");
+                    reserveBtn.textContent = "Reservar";
                 }
-            } catch (error) {
-                console.error("Error al buscar ubicación:", error);
-                alert("Error al cargar el mapa. Intenta de nuevo.");
-            }
-        });
-
-        const reserveBtn = item.querySelector(".reserve-btn");
-        if (product.reserved && product.reserveTime) startTimer(item, product.reserveTime);
-        reserveBtn.addEventListener("click", () => {
-            product.reserved = true;
-            product.reserveTime = Date.now() + 30 * 60 * 1000;
-            localStorage.setItem("products", JSON.stringify(productsListToArray()));
-            reserveBtn.disabled = true;
-            startTimer(item, product.reserveTime);
-            points += 5;
-            localStorage.setItem("userPoints", points);
-            userPoints.textContent = points;
-        });
-
-        item.querySelector(".share-btn").addEventListener("click", () => {
-            const baseUrl = "https://tuetano34.github.io/rescate-alimentario";
-            const shareUrl = `${baseUrl}?id=${product.id}&nombre=${encodeURIComponent(product.nombre)}&ubicacion=${encodeURIComponent(product.ubicacion)}&categoria=${product.categoria}&fecha=${product.fecha}&precio=${product.precio || ''}&precio_rebajado=${product.precioRebajado || ''}`;
-            const text = `${product.nombre} disponible en ${product.ubicacion}. ¡Resérvalo ahora!`;
-            
-            console.log("Enlace generado para compartir:", shareUrl);
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: "Rescate Alimentario",
-                    text: text,
-                    url: shareUrl
-                })
-                .then(() => console.log("Compartido exitosamente"))
-                .catch(err => {
-                    console.error("Error al compartir:", err);
-                    fallbackShare(shareUrl);
+                
+                reserveBtn.addEventListener("click", function() {
+                    toggleReserve(index);
                 });
-            } else {
-                console.log("navigator.share no soportado");
-                fallbackShare(shareUrl);
-            }
-        });
+                productDiv.appendChild(reserveBtn);
 
-        item.querySelector(".delete-btn").addEventListener("click", () => {
-            if (confirm(`¿Borrar ${product.nombre}?`)) {
-                item.remove();
-                localStorage.setItem("products", JSON.stringify(productsListToArray()));
-                updateStats(productsList.children.length);
-            }
-        });
-    }
-
-    // Fallback para compartir si navigator.share no está disponible
-    function fallbackShare(url) {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(url)
-                .then(() => {
-                    alert("Enlace copiado al portapapeles: " + url);
-                })
-                .catch(err => {
-                    console.error("Error al copiar al portapapeles:", err);
-                    alert("Por favor, copia este enlace manualmente: " + url);
+                // Botón para compartir por WhatsApp
+                const shareBtn = document.createElement("button");
+                shareBtn.classList.add("share-btn");
+                shareBtn.textContent = "Compartir";
+                shareBtn.addEventListener("click", function() {
+                    shareProductWhatsApp(product);
                 });
-        } else {
-            alert("Por favor, copia este enlace manualmente: " + url);
-        }
-    }
+                productDiv.appendChild(shareBtn);
 
-    // Timer
-    function startTimer(item, endTime) {
-        const timer = item.querySelector(".timer");
-        const update = () => {
-            const timeLeft = endTime - Date.now();
-            if (timeLeft <= 0) {
-                timer.textContent = "Reserva expirada";
-                item.querySelector(".reserve-btn").disabled = false;
-                const products = productsListToArray();
-                const product = products.find(p => p.id == item.dataset.id);
-                if (product) {
-                    product.reserved = false;
-                    product.reserveTime = null;
-                    localStorage.setItem("products", JSON.stringify(products));
-                }
-            } else {
-                const minutes = Math.floor(timeLeft / 60000);
-                const seconds = Math.floor((timeLeft % 60000) / 1000);
-                timer.textContent = `Tiempo restante: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-                setTimeout(update, 1000);
+                // Botón para borrar producto
+                const deleteBtn = document.createElement("button");
+                deleteBtn.classList.add("delete-btn");
+                deleteBtn.textContent = "Borrar";
+                deleteBtn.addEventListener("click", function() {
+                    deleteProduct(index);
+                });
+                productDiv.appendChild(deleteBtn);
+    
+                productsList.appendChild(productDiv);
             }
-        };
-        update();
-    }
-
-    function productsListToArray() {
-        return Array.from(productsList.children).map(item => {
-            const product = JSON.parse(localStorage.getItem("products")).find(p => p.id == item.dataset.id);
-            return { ...product, reserved: item.querySelector(".reserve-btn").disabled, reserveTime: product.reserveTime };
         });
     }
 
-    // Filter Products
-    function filterProducts() {
-        const search = searchInput.value.toLowerCase();
-        const category = categoryFilter.value;
-        Array.from(productsList.children).forEach(item => {
-            const name = item.querySelector("p").textContent.toLowerCase();
-            const cat = Object.keys(categoryIcons).find(key => item.querySelector(".icon").classList.contains(categoryIcons[key]));
-            item.style.display = (name.includes(search) && (!category || cat === category)) ? "block" : "none";
-        });
-    }
-    searchInput.addEventListener("input", filterProducts);
-    categoryFilter.addEventListener("change", filterProducts);
-
-    // Clear All
-    clearAllBtn.addEventListener("click", () => {
-        if (productsList.children.length && confirm("¿Borrar todo?")) {
-            productsList.innerHTML = "";
-            localStorage.setItem("products", "[]");
-            updateStats(0);
-        }
-    });
-
-    // Map
-    function showMap(lat, lng, nombre, ubicacion) {
-        const mapId = `map-${Date.now()}`;
-        const modal = document.createElement("div");
-        modal.className = "map-modal";
-        modal.innerHTML = `
-            <div class="map-content">
-                <h3>${nombre}</h3>
-                <p>${ubicacion}</p>
-                <div id="${mapId}" style="height: 300px;"></div>
-                <button>Cerrar</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        setTimeout(() => {
-            const map = L.map(mapId).setView([lat, lng], 15);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap"
-            }).addTo(map);
-            L.marker([lat, lng]).addTo(map).bindPopup(nombre).openPopup();
-        }, 0);
-
-        modal.querySelector("button").addEventListener("click", () => modal.remove());
-        modal.addEventListener("click", (e) => {
-            if (e.target === modal) modal.remove();
-        });
+    function deleteProduct(index) {
+        let products = JSON.parse(localStorage.getItem("products") || "[]");
+        products.splice(index, 1);
+        localStorage.setItem("products", JSON.stringify(products));
+        displayProducts();
     }
 
-    // Stats
-    function updateStats(count) {
-        totalWeight.textContent = count * 0.5;
+    function toggleReserve(index) {
+        let products = JSON.parse(localStorage.getItem("products") || "[]");
+        products[index].reservado = !products[index].reservado;
+        localStorage.setItem("products", JSON.stringify(products));
+        displayProducts();
     }
+
+    function shareProductWhatsApp(product) {
+        const text = `¡Rescata alimentos! *${product.nombre}* disponible en ${product.ubicacion}. Precio rebajado: ${product.precioRebajado}€ (antes ${product.precio}€). Fecha caducidad: ${product.fecha}. Vía app Rescate Alimentario.`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    function openMap(location) {
+        const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(location)}`;
+        window.open(mapUrl, "_blank");
+    }
+
+    displayProducts();
+
+    document.getElementById("category-filter").addEventListener("change", displayProducts);
+    document.getElementById("search-input").addEventListener("input", displayProducts);
 });
-
-// Notification Styling
-const style = document.createElement("style");
-style.textContent = `
-    .notification {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #28a745;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        z-index: 1000;
-    }
-    .map-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .map-content {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 90%;
-    }
-`;
-document.head.appendChild(style);

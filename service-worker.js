@@ -1,4 +1,4 @@
-const CACHE_NAME = "rescate-alimentario-v1";
+const CACHE_NAME = "FoodRescue-v1";
 const urlsToCache = [
     "/",
     "/index.html",
